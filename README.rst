@@ -17,6 +17,43 @@ To make it easy just run once, it will install the required version of om.next l
 
     make setup
 
+Test the backend from the command line
+--------------------------------------
+
+for this you will need to install `transito <https://pypi.python.org/pypi/transito>`_::
+
+    sudo pip install transito
+
+and then run::
+
+    echo '[:tudu/items]' | transito http post http://localhost:8080/query e2t -
+    echo '[(tudu.item/create {:value {:title "My Task"}})]' | transito http post http://localhost:8080/query e2t -
+    echo '[(tudu.item/close {:id 2})]' | transito http post http://localhost:8080/query e2t -
+
+Interactive Backend Development
+-------------------------------
+
+start a repl::
+
+    lein repl
+
+in the repl::
+
+    (require 'tudu.core :reload-all)
+    (def sys (tudu.core/start "localhost" 8080 "/"))
+    (tudu.core/stop sys)
+
+if you want to be really sure a namespace was recompiled run::
+
+    ; change the path to the path of your module
+    (load-file "src/tudu/web.clj")
+    (load-file "src/tudu/api.clj")
+
+every time you want to reload changes evaluate again the first line and stop
+start the system if the changes involve the system.
+
+To use the repl from vim I use `vim-slime <https://github.com/jpalardy/vim-slime>`_
+
 License
 -------
 

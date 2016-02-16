@@ -5,8 +5,16 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.7.228"]
-                 [org.omcljs/om "1.0.0-alpha30"]]
+                 [org.omcljs/om "1.0.0-alpha30"]
 
+                 [com.h2database/h2 "1.4.190"]
+                 [org.clojure/java.jdbc "0.4.2"]
+                 [com.stuartsierra/component "0.3.1"]
+                 [org.immutant/web "2.1.2"]
+                 [com.cognitect/transit-clj "0.8.285"]
+                 [bidi "1.21.1"]]
+
+  :main tudu.core
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-3"]]
 
