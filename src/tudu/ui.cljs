@@ -5,23 +5,42 @@
 
 (enable-console-print!)
 
-(defonce state (atom {:tudu/count 0}))
+(defonce state (atom {:tudu/items
+                      [{:id 1 :status :close :title "Implement this Step"}
+                       {:id 2 :status :open :title "Buy Food"}
+                       {:id 3 :status :open :title "Implement next Step"}]}))
 
 (defn on-increment-click [component]
   (om/transact! component
                 `[(tudu.counter/increment {:amount 1}) :tudu/count]))
 
+(defn todo-item-ui [{:keys [id status title]}]
+  (dom/div #js {:className "todo-list-item" :key (str "todo-item-" id)}
+           (dom/span #js {:className (str "todo-list-item-title status-" (name status))}
+                     title)))
+
+(defui TodoListUI
+  static om/IQuery
+  (query [this]
+         [:tudu/items])
+  Object
+  (render [this]
+          (let [{:keys [tudu/items]} (om/props this)]
+            (dom/div #js {:className "todo-list-items"}
+                     (map todo-item-ui items)))))
+
+(def todo-list-ui (om/factory TodoListUI))
+
 (defui UI
   static om/IQuery
   (query [this]
-         [:tudu/count])
+         ; if I just return (om/get-query TodoListUI) I get
+         ; Error: Assert failed: Query violation
+         (vec (concat (om/get-query TodoListUI))))
   Object
   (render [this]
-          (let [{:keys [tudu/count]} (om/props this)]
-            (dom/div nil
-                     (dom/span nil "Count: " count)
-                     (dom/button #js {:onClick #(on-increment-click this)}
-                                 "Increment")))))
+          (let [props (om/props this)]
+            (todo-list-ui props))))
 
 (defmulti read om/dispatch)
 (defmulti mutate om/dispatch)
@@ -30,11 +49,6 @@
   (if-let [[_ value] (find @state key)]
     {:value value}
     :not-found))
-
-(defmethod mutate 'tudu.counter/increment
-  [{:keys [state] :as env} _ {:keys [amount]}]
-  {:action (fn [] (swap! state (fn [st]
-                                 (update st :tudu/count #(+ % amount)))))})
 
 (def reconciler (om/reconciler
                   {:state state
