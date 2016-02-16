@@ -5,24 +5,31 @@
 
 (enable-console-print!)
 
-(defonce state (atom {:tudu/items
-                      [{:id 1 :status :close :title "Implement this Step"}
-                       {:id 2 :status :open :title "Buy Food"}
-                       {:id 3 :status :open :title "Implement next Step"}]}))
+(def initial-state {:tudu/items
+                    [{:id 1 :status :close :title "Implement this Step"}
+                     {:id 2 :status :open :title "Buy Food"}
+                     {:id 3 :status :open :title "Implement next Step"}]})
 
-(defn on-increment-click [component]
-  (om/transact! component
-                `[(tudu.counter/increment {:amount 1}) :tudu/count]))
+(defui TodoItemUI
+  static om/IQuery
+  (query [this]
+         '[:id :status :title])
+  static om/Ident
+  (ident [this {:keys [id]}]
+         [:tudu.items/by-id id])
+  Object
+  (render [this]
+          (let [{:keys [id status title]} (om/props this)
+                class-name (str "todo-list-item-title status-" (name status))]
+            (dom/div #js {:className "todo-list-item" :key (str "todo-item-" id)}
+                     (dom/span #js {:className class-name} title)))))
 
-(defn todo-item-ui [{:keys [id status title]}]
-  (dom/div #js {:className "todo-list-item" :key (str "todo-item-" id)}
-           (dom/span #js {:className (str "todo-list-item-title status-" (name status))}
-                     title)))
+(def todo-item-ui (om/factory TodoItemUI {:keyfn :id}))
 
 (defui TodoListUI
   static om/IQuery
   (query [this]
-         [:tudu/items])
+         [{:tudu/items (om/get-query TodoItemUI)}])
   Object
   (render [this]
           (let [{:keys [tudu/items]} (om/props this)]
@@ -45,13 +52,21 @@
 (defmulti read om/dispatch)
 (defmulti mutate om/dispatch)
 
-(defmethod read :default [env key params]
+(defmethod read :default [{:keys [state]} key params]
   (if-let [[_ value] (find @state key)]
     {:value value}
     :not-found))
 
+(defn get-items [state]
+  (let [st @state]
+    (into [] (map #(get-in st %)) (get st :tudu/items))))
+
+
+(defmethod read :tudu/items [{:keys [state]} key params]
+  {:value (get-items state)})
+
 (def reconciler (om/reconciler
-                  {:state state
+                  {:state initial-state
                    :parser (om/parser {:read read :mutate mutate})}))
 
 (om/add-root! reconciler UI (gdom/getElement "main-app-area"))
