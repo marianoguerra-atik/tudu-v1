@@ -10,6 +10,9 @@
                      {:id 2 :status :open :title "Buy Food"}
                      {:id 3 :status :open :title "Implement next Step"}]})
 
+(defn close-item [component id]
+  (om/transact! component `[(tudu.item/close {:id ~id}) :tudu/items]))
+
 (defui TodoItemUI
   static om/IQuery
   (query [this]
@@ -20,8 +23,13 @@
   Object
   (render [this]
           (let [{:keys [id status title]} (om/props this)
+                closed? (= status :close)
                 class-name (str "todo-list-item-title status-" (name status))]
             (dom/div #js {:className "todo-list-item" :key (str "todo-item-" id)}
+                     (dom/input #js {:type "checkbox" :disabled closed?
+                                     :checked closed?
+                                     :onClick #(close-item this id)})
+
                      (dom/span #js {:className class-name} title)))))
 
 (def todo-item-ui (om/factory TodoItemUI {:keyfn :id}))
@@ -61,12 +69,16 @@
   (let [st @state]
     (into [] (map #(get-in st %)) (get st :tudu/items))))
 
-
 (defmethod read :tudu/items [{:keys [state]} key params]
   {:value (get-items state)})
 
-(def reconciler (om/reconciler
-                  {:state initial-state
-                   :parser (om/parser {:read read :mutate mutate})}))
+(defmethod mutate 'tudu.item/close [{:keys [state]} _ {:keys [id]}]
+  {:action (fn []
+             (swap! state
+                    #(assoc-in % [:tudu.items/by-id id :status] :close)))})
+
+(defonce reconciler (om/reconciler
+                      {:state initial-state
+                       :parser (om/parser {:read read :mutate mutate})}))
 
 (om/add-root! reconciler UI (gdom/getElement "main-app-area"))
