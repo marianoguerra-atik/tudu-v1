@@ -42,6 +42,9 @@
 
 (def todo-item-ui (om/factory TodoItemUI {:keyfn :id}))
 
+(defn status-to-order [{:keys [status]}]
+  (if (= status :open) 0 1))
+
 (defui TodoListUI
   static om/IQuery
   (query [this]
@@ -51,7 +54,8 @@
           (let [{:keys [tudu/items]} (om/props this)
                 tui-cprops {:close-item #(close-item reconciler %)}]
             (dom/div #js {:className "todo-list-items"}
-                     (map #(todo-item-ui (om/computed % tui-cprops)) items)))))
+                     (map #(todo-item-ui (om/computed % tui-cprops))
+                         (sort-by (juxt status-to-order :id) items))))))
 
 (def todo-list-ui (om/factory TodoListUI))
 
@@ -86,7 +90,8 @@
                       ; NOTE: I have to pass the reconciler here and not the
                       ; component otherwise I get:
                       ; Error: No queries exist for component path (tudu.ui/UI tudu.ui/NewTodoItemUI)
-                      (dom/button #js {:onClick #(create-task reconciler editing)}
+                      (dom/button #js {:className "new-todo-item-create"
+                                       :onClick #(create-task reconciler editing)}
                                   "Create")))))
 
 (def new-todo-item-ui (om/factory NewTodoItemUI))
@@ -100,8 +105,8 @@
   (render [this]
           (let [props (om/props this)]
             (dom/div nil
-                     (todo-list-ui props)
-                     (new-todo-item-ui props)))))
+                     (new-todo-item-ui props)
+                     (todo-list-ui props)))))
 
 (defmulti read om/dispatch)
 (defmulti mutate om/dispatch)

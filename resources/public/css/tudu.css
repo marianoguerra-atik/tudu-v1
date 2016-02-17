@@ -1,3 +1,17 @@
 .todo-list-item-title.status-close{
  text-decoration: line-through;
 }
+
+body{
+ margin: 2em 15%;
+ font-size: 16pt;
+ font-family: helvetica;
+ color: #333;
+ background-color: #fefefe;
+}
+
+.new-todo-item-create, .form-group>label, .form-group>input{
+ margin: 0.2em 0;
+ width: 50%;
+ margin-right: 50%;
+}
