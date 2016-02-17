@@ -111,19 +111,19 @@
   (let [st @state]
     (into [] (map #(get-in st %)) (get st k))))
 
-(defmethod read :tudu/items [{:keys [state ast] :as env} k params]
+(defmethod read :tudu/items [{:keys [state] :as env} k params]
   (let [value (get-items state k)]
-    {:value value :api ast}))
+    {:value value :api true}))
 
-(defmethod mutate 'tudu.item/close [{:keys [state ast]} _ {:keys [id]}]
-  {:remote true :api ast
+(defmethod mutate 'tudu.item/close [{:keys [state]} _ {:keys [id]}]
+  {:api true
    :action #(swap! state assoc-in [:tudu.items/by-id id :status] :close)})
 
 (defmethod mutate 'tudu.item.editing/set-title [{:keys [state]} _ {:keys [value]}]
   {:action #(swap! state assoc-in [:tudu.item/editing :title] value)})
 
-(defmethod mutate 'tudu.item/create [{:keys [state ast]} _ {:keys [value]}]
-  {:remote true :api ast
+(defmethod mutate 'tudu.item/create [{:keys [state]} _ {:keys [value]}]
+  {:api true
    :action (fn []
              (let [id (om/tempid)
                    full-task (assoc value :id id :status :open)]
