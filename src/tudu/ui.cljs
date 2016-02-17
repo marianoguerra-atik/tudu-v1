@@ -68,18 +68,20 @@
                             :tudu.item/editing :tudu/items]))
 
 (defui NewTodoItemUI
+  static om/IQuery
+  (query [this]
+         '[:title])
   Object
   (render [this]
-          (let [{:keys [tudu.item/editing]} (om/props this)
-                {:keys [title]} editing
-                {:keys [create-task on-title-change]} (om/get-computed this)]
+          (let [{:keys [title] :as editing} (om/props this)
+                on-title-change (on-change-cb this task-title-change)]
             (dom/div #js {:className "new-todo-item-form"}
                       (dom/div #js {:className "form-group"}
                                (dom/label nil "Task")
                                (dom/input #js {:value title
                                                :onChange on-title-change}))
                       (dom/button #js {:className "new-todo-item-create"
-                                       :onClick #(create-task editing)}
+                                       :onClick #(create-task this editing)}
                                   "Create")))))
 
 (def new-todo-item-ui (om/factory NewTodoItemUI))
@@ -87,15 +89,14 @@
 (defui UI
   static om/IQuery
   (query [this]
-         [:tudu.item/editing
+         [{:tudu.item/editing (om/get-query NewTodoItemUI)}
           {:tudu/items (om/get-query TodoItemUI)}])
   Object
   (render [this]
-          (let [props (om/props this)
-                nti-cprops {:on-title-change (on-change-cb this task-title-change)
-                            :create-task #(create-task this %)}]
+          (let [{:keys [tudu.item/editing] :as props} (om/props this)]
+            (prn (dissoc props :tudu/items))
             (dom/div nil
-                     (new-todo-item-ui (om/computed props nti-cprops))
+                     (new-todo-item-ui editing)
                      (todo-list-ui props)))))
 
 (defmulti read om/dispatch)
