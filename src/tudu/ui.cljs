@@ -10,7 +10,6 @@
     [cljs.core.async.macros :refer [go]]))
 
 (enable-console-print!)
-(declare reconciler)
 
 (def clean-item-editing {:title ""})
 
@@ -30,13 +29,12 @@
   Object
   (render [this]
           (let [{:keys [id status title]} (om/props this)
-                {:keys [close-item]} (om/get-computed this)
                 closed? (= status :close)
                 class-name (str "todo-list-item-title status-" (name status))]
             (dom/div #js {:className "todo-list-item" :key (str "todo-item-" id)}
                      (dom/input #js {:type "checkbox" :disabled closed?
                                      :checked closed?
-                                     :onClick #(close-item id)})
+                                     :onClick #(close-item this id)})
 
                      (dom/span #js {:className class-name} title)))))
 
@@ -46,15 +44,11 @@
   (if (= status :open) 0 1))
 
 (defui TodoListUI
-  static om/IQuery
-  (query [this]
-         [{:tudu/items (om/get-query TodoItemUI)}])
   Object
   (render [this]
-          (let [{:keys [tudu/items]} (om/props this)
-                tui-cprops {:close-item #(close-item reconciler %)}]
+          (let [{:keys [tudu/items]} (om/props this)]
             (dom/div #js {:className "todo-list-items"}
-                     (map #(todo-item-ui (om/computed % tui-cprops))
+                     (map todo-item-ui
                          (sort-by (juxt status-to-order :id) items))))))
 
 (def todo-list-ui (om/factory TodoListUI))
@@ -74,24 +68,18 @@
                             :tudu.item/editing :tudu/items]))
 
 (defui NewTodoItemUI
-  static om/IQuery
-  (query [this]
-         [:tudu.item/editing])
   Object
   (render [this]
           (let [{:keys [tudu.item/editing]} (om/props this)
                 {:keys [title]} editing
-                on-change (on-change-cb reconciler task-title-change)]
+                {:keys [create-task on-title-change]} (om/get-computed this)]
             (dom/div #js {:className "new-todo-item-form"}
                       (dom/div #js {:className "form-group"}
                                (dom/label nil "Task")
                                (dom/input #js {:value title
-                                               :onChange on-change}))
-                      ; NOTE: I have to pass the reconciler here and not the
-                      ; component otherwise I get:
-                      ; Error: No queries exist for component path (tudu.ui/UI tudu.ui/NewTodoItemUI)
+                                               :onChange on-title-change}))
                       (dom/button #js {:className "new-todo-item-create"
-                                       :onClick #(create-task reconciler editing)}
+                                       :onClick #(create-task editing)}
                                   "Create")))))
 
 (def new-todo-item-ui (om/factory NewTodoItemUI))
@@ -99,13 +87,15 @@
 (defui UI
   static om/IQuery
   (query [this]
-         (vec (concat (om/get-query TodoListUI)
-                      (om/get-query NewTodoItemUI))))
+         [:tudu.item/editing
+          {:tudu/items (om/get-query TodoItemUI)}])
   Object
   (render [this]
-          (let [props (om/props this)]
+          (let [props (om/props this)
+                nti-cprops {:on-title-change (on-change-cb this task-title-change)
+                            :create-task #(create-task this %)}]
             (dom/div nil
-                     (new-todo-item-ui props)
+                     (new-todo-item-ui (om/computed props nti-cprops))
                      (todo-list-ui props)))))
 
 (defmulti read om/dispatch)
