@@ -5,7 +5,9 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.7.228"]
+                 [org.clojure/core.async "0.2.374"]
                  [org.omcljs/om "1.0.0-alpha30"]
+                 [cljs-http "0.1.38"]
 
                  [com.h2database/h2 "1.4.190"]
                  [org.clojure/java.jdbc "0.4.2"]
@@ -18,6 +20,7 @@
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-3"]]
 
+  :source-paths ["src"]
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "target"]
 

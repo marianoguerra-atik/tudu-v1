@@ -22,7 +22,7 @@
 
 (defmethod read :tudu/items [{:keys [app-env]} key {:keys [id] :as params}]
   (let [{:keys [db]} app-env]
-    {:value (tudu.store/get-tasks db)}))
+    {:value (vec (tudu.store/get-tasks db))}))
 
 (defmethod mutate :default [_ key params]
   {:status 404 :body {:error "Not Found" :key key :params params}})
@@ -35,5 +35,5 @@
 (defmethod mutate 'tudu.item/create [{:keys [app-env]} _ {:keys [value]}]
   (let [{:keys [db]} app-env]
     (tudu.store/create-task db value)
-    {:status 201 :body {}}))
+    {:status 200 :body {}}))
 
