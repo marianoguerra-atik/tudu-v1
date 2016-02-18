@@ -17,6 +17,22 @@ To make it easy just run once, it will install the required version of om.next l
 
     make setup
 
+Get up and running
+------------------
+
+To get the app up and running in dev mode, you'll need to start the front end
+and the backend.
+
+To start the front end, run::
+
+    lein figwheel
+
+To start the backend, run::
+
+    lein run
+
+The app will now be accessible at http://localhost:8080/index.html
+
 Test the backend from the command line
 --------------------------------------
 
