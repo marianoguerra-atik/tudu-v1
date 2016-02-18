@@ -4,9 +4,9 @@
     [om.next.server :as om]))
 
 (defmulti readf om/dispatch)
-(defmulti mutate om/dispatch)
+(defmulti mutatef om/dispatch)
 
-(def parser (om/parser {:read readf :mutate mutate}))
+(def parser (om/parser {:read readf :mutate mutatef}))
 
 (defn query [{:keys [body request]}]
   (let [query-env {:app-env (:tudu/env request)}]
@@ -22,15 +22,15 @@
   (let [{:keys [db]} app-env]
     {:value (vec (tudu.store/get-tasks db))}))
 
-(defmethod mutate :default [_ key params]
+(defmethod mutatef :default [_ key params]
   :notfound)
 
-(defmethod mutate 'tudu.item/close [{:keys [app-env]} _ {:keys [id]}]
+(defmethod mutatef 'tudu.item/close [{:keys [app-env]} _ {:keys [id]}]
   (let [{:keys [db]} app-env]
     (tudu.store/close-task db id)
     {}))
 
-(defmethod mutate 'tudu.item/create [{:keys [app-env]} _ {:keys [value]}]
+(defmethod mutatef 'tudu.item/create [{:keys [app-env]} _ {:keys [value]}]
   (let [{:keys [db]} app-env]
     (tudu.store/create-task db value)
     {}))
