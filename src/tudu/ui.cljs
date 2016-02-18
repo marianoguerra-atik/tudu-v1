@@ -15,8 +15,8 @@
 (def initial-state {:tudu.item/editing clean-item-editing
                     :tudu/items nil})
 
-(defn close-item [c-or-r id]
-  (om/transact! c-or-r `[(tudu.item/close {:id ~id}) :tudu/items]))
+(defn close-item [c id]
+  (om/transact! c `[(tudu.item/close {:id ~id}) :tudu/items]))
 
 (defui TodoItemUI
   static om/IQuery
@@ -52,18 +52,18 @@
 
 (def todo-list-ui (om/factory TodoListUI))
 
-(defn on-change-cb [c-or-r callback]
+(defn on-change-cb [c callback]
   (fn [e]
     (let [target (.-target e)
           value (.-value target)]
-      (callback c-or-r value))))
+      (callback c value))))
 
-(defn task-title-change [c-or-r text]
-  (om/transact! c-or-r `[(tudu.item.editing/set-title {:value ~text})
+(defn task-title-change [c text]
+  (om/transact! c `[(tudu.item.editing/set-title {:value ~text})
                             :tudu.item/editing]))
 
-(defn create-task [c-or-r task]
-  (om/transact! c-or-r `[(tudu.item/create {:value ~task})
+(defn create-task [c task]
+  (om/transact! c `[(tudu.item/create {:value ~task})
                             :tudu.item/editing :tudu/items]))
 
 (defui NewTodoItemUI
