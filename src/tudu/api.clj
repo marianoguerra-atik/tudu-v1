@@ -9,10 +9,8 @@
 (def parser (om/parser {:read read :mutate mutate}))
 
 (defn query [{:keys [body request]}]
-  (let [query-env {:app-env (:tudu/env request)}
-        params body
-        r (parser query-env params)]
-    {:status 200 :body r}))
+  (let [query-env {:app-env (:tudu/env request)}]
+    {:status 200 :body (parser query-env body)}))
 
 (defn not-found [_]
   {:status 404 :body {:error "Not Found"}})
@@ -25,15 +23,15 @@
     {:value (vec (tudu.store/get-tasks db))}))
 
 (defmethod mutate :default [_ key params]
-  {:status 404 :body {:error "Not Found" :key key :params params}})
+  :notfound)
 
 (defmethod mutate 'tudu.item/close [{:keys [app-env]} _ {:keys [id]}]
   (let [{:keys [db]} app-env]
     (tudu.store/close-task db id)
-    {:status 200 :body {}}))
+    {}))
 
 (defmethod mutate 'tudu.item/create [{:keys [app-env]} _ {:keys [value]}]
   (let [{:keys [db]} app-env]
     (tudu.store/create-task db value)
-    {:status 200 :body {}}))
+    {}))
 
