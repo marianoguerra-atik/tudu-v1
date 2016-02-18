@@ -17,6 +17,7 @@
                  [bidi "1.21.1"]]
 
   :main tudu.core
+  :aot :all
   :plugins [[lein-cljsbuild "1.1.2"]
             [lein-figwheel "0.5.0-3"]]
 
@@ -24,6 +25,7 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "target"]
 
+  :profiles {:uberjar {:prep-tasks ["compile" ["cljsbuild" "once" "prod"]]}}
   :cljsbuild {:builds [{:id "dev"
                         :source-paths ["src"]
                         :figwheel true

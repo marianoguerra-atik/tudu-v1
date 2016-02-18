@@ -3,10 +3,10 @@
     tudu.store
     [om.next.server :as om]))
 
-(defmulti read om/dispatch)
+(defmulti readf om/dispatch)
 (defmulti mutate om/dispatch)
 
-(def parser (om/parser {:read read :mutate mutate}))
+(def parser (om/parser {:read readf :mutate mutate}))
 
 (defn query [{:keys [body request]}]
   (let [query-env {:app-env (:tudu/env request)}]
@@ -15,10 +15,10 @@
 (defn not-found [_]
   {:status 404 :body {:error "Not Found"}})
 
-(defmethod read :default [env key params]
+(defmethod readf :default [env key params]
   :not-found)
 
-(defmethod read :tudu/items [{:keys [app-env]} key {:keys [id] :as params}]
+(defmethod readf :tudu/items [{:keys [app-env]} key {:keys [id] :as params}]
   (let [{:keys [db]} app-env]
     {:value (vec (tudu.store/get-tasks db))}))
 

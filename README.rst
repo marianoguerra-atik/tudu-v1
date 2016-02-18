@@ -65,9 +65,21 @@ You should also be running the backend on another shell, then visit:
 
 http://localhost:8080/index.html
 
-note that http://localhost:8080/ won't work, it has to be http://localhost:8080/index.html
+Note that http://localhost:8080/ won't work, it has to be http://localhost:8080/index.html
 
 You can now make changes on the frontend and it will live reload.
+
+Build for Deployment
+--------------------
+
+To build::
+
+    lein uberjar
+
+To run the build (stop the backend if you are running it for development to avoid port collisions)::
+
+    cd target
+    java -jar tudu-0.1.0-SNAPSHOT-standalone.jar
 
 License
 -------

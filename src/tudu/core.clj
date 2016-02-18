@@ -2,7 +2,8 @@
   (:require
     tudu.store
     tudu.web
-    [com.stuartsierra.component :as component]))
+    [com.stuartsierra.component :as component])
+  (:gen-class))
 
 (defn system [{:keys [web-info db-info]}]
   (component/system-map

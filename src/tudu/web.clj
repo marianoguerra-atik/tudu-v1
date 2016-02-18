@@ -2,7 +2,6 @@
   (:require
     tudu.data
     [tudu.api :as api]
-    om.next.server
     [com.stuartsierra.component :as component]
     [bidi.ring :refer [make-handler]]
     [ring.middleware.resource :refer [wrap-resource]]
