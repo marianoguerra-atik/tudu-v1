@@ -54,6 +54,21 @@ start the system if the changes involve the system.
 
 To use the repl from vim I use `vim-slime <https://github.com/jpalardy/vim-slime>`_
 
+Compiling the Frontend
+----------------------
+
+To compile the frontend and have live reload capabilities run::
+
+    lein figwheel
+
+You should also be running the backend on another shell, then visit:
+
+http://localhost:8080/index.html
+
+note that http://localhost:8080/ won't work, it has to be http://localhost:8080/index.html
+
+You can now make changes on the frontend and it will live reload.
+
 License
 -------
 
