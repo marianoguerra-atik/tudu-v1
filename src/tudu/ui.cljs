@@ -1,7 +1,6 @@
 (ns tudu.ui
   (:require
     [cljs-http.client :as http]
-    [goog.dom :as gdom]
     [om.next :as om :refer-macros [defui]]
     [cognitect.transit :as transit]
     [cljs.core.async :refer [<!]]
@@ -162,4 +161,13 @@
                        :remotes [:api]
                        :parser (om/parser {:read read :mutate mutate})}))
 
-(om/add-root! reconciler UI (gdom/getElement "main-app-area"))
+(defonce root (atom nil))
+
+(defn init []
+  (if (nil? @root)
+    (let [target (js/document.getElementById "main-app-area")]
+      (om/add-root! reconciler UI target)
+      (reset! root UI))
+    (om/force-root-render! reconciler)))
+
+(init)
