@@ -1,12 +1,9 @@
 (ns tudu.ui
   (:require
-    [cljs-http.client :as http]
     [om.next :as om :refer-macros [defui]]
     [cognitect.transit :as transit]
-    [cljs.core.async :refer [<!]]
     [om.dom :as dom])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+  (:import [goog.net XhrIo]))
 
 (enable-console-print!)
 
@@ -42,13 +39,22 @@
 (defn status-to-order [{:keys [status]}]
   (if (= status :open) 0 1))
 
+(defn compare-todo-items [{a-status :status a-id :id} {b-status :status b-id :id}]
+  (let [status-compare (compare (status-to-order a-status)
+                                (status-to-order b-status))]
+    (if (zero? status-compare)
+      (if (or (om.tempid/tempid? a-id) (om.tempid/tempid? b-id))
+        0
+        (compare a-id b-id))
+      status-compare)))
+
 (defui TodoListUI
   Object
   (render [this]
           (let [{:keys [tudu/items]} (om/props this)]
             (dom/div #js {:className "todo-list-items"}
                      (map todo-item-ui
-                         (sort-by (juxt status-to-order :id) items))))))
+                         (sort-by compare-todo-items items))))))
 
 (def todo-list-ui (om/factory TodoListUI))
 
@@ -63,8 +69,9 @@
                             :tudu.item/editing]))
 
 (defn create-task [c task]
-  (om/transact! c `[(tudu.item/create {:value ~task})
-                            :tudu.item/editing :tudu/items]))
+  (let [full-task (assoc task :id (om/tempid) :status :open)]
+    (om/transact! c `[(tudu.item/create {:value ~full-task})
+                      :tudu.item/editing])))
 
 (defui NewTodoItemUI
   static om/IQuery
@@ -93,7 +100,6 @@
   Object
   (render [this]
           (let [{:keys [tudu.item/editing] :as props} (om/props this)]
-            (prn (dissoc props :tudu/items))
             (dom/div nil
                      (new-todo-item-ui editing)
                      (todo-list-ui props)))))
@@ -124,12 +130,11 @@
 (defmethod mutate 'tudu.item/create [{:keys [state]} _ {:keys [value]}]
   {:api true
    :action (fn []
-             (let [id (om/tempid)
-                   full-task (assoc value :id id :status :open)]
-               (swap! state
+             (swap! state
+                    (let [{:keys [id]} value]
                       #(-> %
                            (assoc :tudu.item/editing clean-item-editing)
-                           (assoc-in [:tudu.items/by-id id] full-task)
+                           (assoc-in [:tudu.items/by-id id] value)
                            (update :tudu/items
                                    (fn [s] (conj s [:tudu.items/by-id id])))))))})
 
@@ -142,10 +147,15 @@
 (defn to-transit [data]
   (transit/write writer data))
 
-(defn send-post [path query cb]
-  (let [req (http/post path {:headers {"content-type" "application/transit+json"}
-                             :body (to-transit query)})]
-    (go (cb (<! req)))))
+(defn send-post [url data cb]
+  (.send XhrIo url (fn [resp]
+                     (let [target (.-target resp)
+                           body-raw (.getResponse target)
+                           body (parse-transit body-raw)
+                           status (.getStatus target)]
+                     (cb {:status status :body body})))
+         "POST" (to-transit data)
+         #js {"content-type" "application/transit+json"}))
 
 (defn send-query [query cb]
   (send-post "/query" query cb))
@@ -155,10 +165,18 @@
                     (when (= status 200)
                       (cb body)))))
 
+(defn resolve-tempids [state tid->rid]
+  (clojure.walk/prewalk #(if (om.tempid/tempid? %) (get tid->rid %) %) state))
+
+(defn tempid-migrate [pure query tempids id-key]
+  (resolve-tempids pure tempids))
+
 (defonce reconciler (om/reconciler
                       {:state initial-state
                        :send send-to-api
                        :remotes [:api]
+                       :id-key :db/id
+                       :migrate tempid-migrate
                        :parser (om/parser {:read read :mutate mutate})}))
 
 (defonce root (atom nil))
