@@ -169,7 +169,9 @@
   (clojure.walk/prewalk #(if (om.tempid/tempid? %) (get tid->rid %) %) state))
 
 (defn tempid-migrate [pure query tempids id-key]
-  (resolve-tempids pure tempids))
+  (if (empty? tempids)
+    pure
+    (resolve-tempids pure tempids)))
 
 (defonce reconciler (om/reconciler
                       {:state initial-state
